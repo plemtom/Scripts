@@ -387,6 +387,9 @@ function groundBattle.setVisible(grpName)
     if grp then
         local cmd = {id = 'SetInvisible', params = {value = false}}
         local cntr = Group.getController(grp)
+        if cntr == nil then 
+            groundBattle.debugMessage("Controller is nil!")
+        end
         Controller.setCommand(cntr, cmd)
     end
 end
