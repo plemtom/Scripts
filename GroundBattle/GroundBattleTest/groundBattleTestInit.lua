@@ -21,7 +21,7 @@ groundBattle.factions.blue.groundTemplates.mbt = {"BLUE_MBT_T"}
 groundBattle.factions.blue.groundTemplates.inf = {}
 
 
--- init combat zones
+-- init combat zoness
 
 for i=1, 9 do
     zoneName = string.format("CombatZone-%d", i)
