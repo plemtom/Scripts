@@ -437,7 +437,7 @@ function groundBattle.produceGroup(faction, zoneName)
     ---- groundBattle.debugMessage("Ground group to spawn: " .. groupToSpawnName, 5)
     
     --get faction controlled zones and randomize zone to spawn the group in
-    local zoneNames 
+    local zoneNames = {}
     if zoneName then
         zoneNames[#zoneNames+1] = zoneName
         groundBattle.debugMessage("Spawning group in explicit zone " .. zoneName)
