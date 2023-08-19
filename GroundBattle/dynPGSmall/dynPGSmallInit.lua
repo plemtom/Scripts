@@ -80,6 +80,9 @@ groundBattle.initiated = true
 groundBattle.debug = true
 groundBattle.debugMessage(string.format("Init done. Combat zones: %d.", #groundBattle.combatZones))
 
+groundBattle.debugMessage("Executing groundBattle.run()")
+groundBattle.run()
+
 -- initial units placement
 groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-11")
 groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-12")
@@ -90,6 +93,3 @@ groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-7")
 groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-7")
 groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-8")
 groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-8")
-
-groundBattle.debugMessage("Executing groundBattle.run()")
-groundBattle.run()
