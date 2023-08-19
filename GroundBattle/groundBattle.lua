@@ -64,6 +64,7 @@ function groundBattle.eventHandler(event)
         groundBattle.debugMessage("Shot event captured.")
         groundBattle.debugMessage(groundBattle.logTable(event, 1))
         
+        local u = Unit.get
         local grp = Unit.getGroup(event.initiator)
         if grp then
             groundBattle.debugMessage(groundBattle.logTable(grp, 1))
@@ -402,7 +403,7 @@ function groundBattle.initiateProduction()
     mist.scheduleFunction(groundBattle.produceGroup, {groundBattle.factions.blue}, timer.getTime() + 5, groundBattle.prodTime/100*groundBattle.factions.blue.prodTimePerc)
 end 
 
-function groundBattle.produceGroup(faction)
+function groundBattle.produceGroup(faction, zoneName)
 
     --remove entries for dead groups
     groundBattle.freeProdSlots(faction)
@@ -432,7 +433,12 @@ function groundBattle.produceGroup(faction)
     ---- groundBattle.debugMessage("Ground group to spawn: " .. groupToSpawnName, 5)
     
     --get faction controlled zones and randomize zone to spawn the group in
-    local zoneNames = groundBattle.getFactionProdZoneNames(faction.name)
+    local zoneNames 
+    if zoneName then
+        zoneNames[#zoneNames+1] = zoneName
+    else
+        zoneNames = groundBattle.getFactionProdZoneNames(faction.name)
+    end
     if #zoneNames == 0 then
         return 
     end
@@ -537,6 +543,7 @@ function groundBattle.spawnInfantry(factionName, zoneName)
                 -- groundBattle.debugMessage("Spawning infantry group in zone " .. zoneName)
             -- end
             groundBattle.setInvisible(grp.name)
+            local zone = groundBattle.combatZones.getZoneByName(zoneName)
             table.insert(zone.defences, grp.name)
         -- else
             -- groundBattle.debugMessage("No infantry templates in faction " .. factionName)
