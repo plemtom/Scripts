@@ -25,7 +25,7 @@
 
 -- initialize LUA tables
 groundBattle = {}
-groundBattle.prodTime = 300
+groundBattle.prodTime = 450
 groundBattle.debug = true
 groundBattle.dmt = 10 -- debug message time
 groundBattle.combatZones = {}
@@ -59,21 +59,22 @@ groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
 
 -- events handler 
-function groundBattle.eventHandler(event)
-    if event.id == 1 then 
-        groundBattle.debugMessage("Shot event captured.")
-        groundBattle.debugMessage(groundBattle.logTable(event, 1))
+-- function groundBattle.eventHandler(event)
+--     if event.id == 1 then 
+--         groundBattle.debugMessage("Shot event captured.")
+--         groundBattle.debugMessage(groundBattle.logTable(event, 1))
         
-        local grp = Unit.getGroup(event.initiator)
-        if grp then
-            groundBattle.debugMessage(groundBattle.logTable(grp, 1))
-            groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
-            groundBattle.setVisible(grp.name)
-        else
-            groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
-        end
-    end
-end 
+--         local u = Unit.get
+--         local grp = Unit.getGroup(event.initiator)
+--         if grp then
+--             groundBattle.debugMessage(groundBattle.logTable(grp, 1))
+--             groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
+--             groundBattle.setVisible(grp.name)
+--         else
+--             groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
+--         end
+--     end
+-- end 
 
 function groundBattle.logTable(tbl, indLevel)
     local retVal = {}
@@ -182,7 +183,7 @@ function groundBattle.combatZones.updateFaction(zoneName, factionName)
     end
     local params = {factionName, zoneName}
     mist.scheduleFunction(groundBattle.spawnAAA, params, timer.getTime()+300, nil, nil)
-    mist.scheduleFunction(groundBattle.spawnInfantry, params, timer.getTime()+300, nil, nil)
+    --mist.scheduleFunction(groundBattle.spawnInfantry, params, timer.getTime()+300, nil, nil)
 end
 
 function groundBattle.getGroupInfoByName(groupName)
@@ -394,6 +395,10 @@ function groundBattle.setVisible(grpName)
     end
 end
 
+function groundBattle.sendMessageToPlayers(message)
+    trigger.action.outTextForCoalition(2, message, 30)
+end
+
 -- production functions ------------------------------------------------------------------------------------------------
 
 function groundBattle.initiateProduction()
@@ -402,7 +407,7 @@ function groundBattle.initiateProduction()
     mist.scheduleFunction(groundBattle.produceGroup, {groundBattle.factions.blue}, timer.getTime() + 5, groundBattle.prodTime/100*groundBattle.factions.blue.prodTimePerc)
 end 
 
-function groundBattle.produceGroup(faction)
+function groundBattle.produceGroup(faction, zoneName)
 
     --remove entries for dead groups
     groundBattle.freeProdSlots(faction)
@@ -432,17 +437,23 @@ function groundBattle.produceGroup(faction)
     ---- groundBattle.debugMessage("Ground group to spawn: " .. groupToSpawnName, 5)
     
     --get faction controlled zones and randomize zone to spawn the group in
-    local zoneNames = groundBattle.getFactionProdZoneNames(faction.name)
+    local zoneNames = {}
+    if zoneName then
+        zoneNames[#zoneNames+1] = zoneName
+        groundBattle.debugMessage("Spawning group in explicit zone " .. zoneName)
+    else
+        zoneNames = groundBattle.getFactionProdZoneNames(faction.name)
+    end
     if #zoneNames == 0 then
         return 
     end
 
     local spawnZoneName = zoneNames[math.random(1, #zoneNames)]
-    ---- groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
+    groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
 
     --spawn the group
     local grp = mist.cloneInZone(groupToSpawnName, spawnZoneName)
-    -- groundBattle.debugMessage("Group spawned. Name: " .. grp.name)
+    groundBattle.debugMessage("Group spawned. Name: " .. grp.name, 5)
 
     --register the group in faction
     table.insert(faction.groundGroups, {name=grp.name, zoneName=spawnZoneName, order="none", factionName=faction.name, type=groupType})
@@ -537,6 +548,7 @@ function groundBattle.spawnInfantry(factionName, zoneName)
                 -- groundBattle.debugMessage("Spawning infantry group in zone " .. zoneName)
             -- end
             groundBattle.setInvisible(grp.name)
+            local zone = groundBattle.combatZones.getZoneByName(zoneName)
             table.insert(zone.defences, grp.name)
         -- else
             -- groundBattle.debugMessage("No infantry templates in faction " .. factionName)
@@ -584,6 +596,14 @@ function groundBattle.processOrders(faction)
                 local linkedZoneName = groundBattle.getRandomLinkedHostileZone(faction.groundGroups[i].zoneName)
                 if linkedZoneName then 
                     groundBattle.giveAttackOrder(faction.groundGroups[i].name, linkedZoneName)
+                    local message = {}
+                    message[#message+1] = "New objective: "
+                    if faction.name == "red" then 
+                        message[#message+1] = "enemy advancing on " .. linkedZoneName .. ". Support ground forces defending the area."
+                    else
+                        message[#message+1] = "perform CAS in " .. linkedZoneName .. "."
+                    end
+                    groundBattle.sendMessageToPlayers(table.concat(message))
                 end
             end
         elseif faction.groundGroups[i].order == "attack" then
@@ -668,7 +688,7 @@ function groundBattle.run()
         return 
     end 
 
-    mist.addEventHandler(groundBattle.eventHandler)
+    --mist.addEventHandler(groundBattle.eventHandler)
 
     groundBattle.updateFrontlineZones()
 
