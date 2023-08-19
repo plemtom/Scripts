@@ -395,6 +395,10 @@ function groundBattle.setVisible(grpName)
     end
 end
 
+function groundBattle.sendMessageToPlayers(message)
+    trigger.action.outTextForCoalition(2, message, 30)
+end
+
 -- production functions ------------------------------------------------------------------------------------------------
 
 function groundBattle.initiateProduction()
@@ -591,6 +595,14 @@ function groundBattle.processOrders(faction)
                 local linkedZoneName = groundBattle.getRandomLinkedHostileZone(faction.groundGroups[i].zoneName)
                 if linkedZoneName then 
                     groundBattle.giveAttackOrder(faction.groundGroups[i].name, linkedZoneName)
+                    local message = {}
+                    message[#message+1] = "New objective: "
+                    if faction.name == "red" then 
+                        message[#message+1] = "enemy advancing on " .. linkedZoneName .. ". Support ground forces defending the area."
+                    else
+                        message[#message+1] = "perform CAS in " .. linkedZoneName .. "."
+                    end
+                    groundBattle.sendMessageToPlayers(table.concat(message))
                 end
             end
         elseif faction.groundGroups[i].order == "attack" then
