@@ -25,7 +25,7 @@
 
 -- initialize LUA tables
 groundBattle = {}
-groundBattle.prodTime = 300
+groundBattle.prodTime = 450
 groundBattle.debug = true
 groundBattle.dmt = 10 -- debug message time
 groundBattle.combatZones = {}
@@ -183,7 +183,7 @@ function groundBattle.combatZones.updateFaction(zoneName, factionName)
     end
     local params = {factionName, zoneName}
     mist.scheduleFunction(groundBattle.spawnAAA, params, timer.getTime()+300, nil, nil)
-    mist.scheduleFunction(groundBattle.spawnInfantry, params, timer.getTime()+300, nil, nil)
+    --mist.scheduleFunction(groundBattle.spawnInfantry, params, timer.getTime()+300, nil, nil)
 end
 
 function groundBattle.getGroupInfoByName(groupName)

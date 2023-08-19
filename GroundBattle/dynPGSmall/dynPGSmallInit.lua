@@ -4,10 +4,10 @@ groundBattle.factions.red.aaaCount = 4
 groundBattle.factions.blue.aaaCount = 2
 
 --init group templates
-groundBattle.factions.red.groundGroupsLimit = 8
-groundBattle.factions.red.apcPerc = 55
+groundBattle.factions.red.groundGroupsLimit = 10
+groundBattle.factions.red.apcPerc = 50
 groundBattle.factions.red.ifvPerc = 30
-groundBattle.factions.red.mbtPerc = 15
+groundBattle.factions.red.mbtPerc = 20
 groundBattle.factions.red.groundTemplates.apc = {"RED_APC_T", "RED_APC_T-1", "RED_APC_T-2", "RED_APC_T-3"}
 groundBattle.factions.red.groundTemplates.ifv = {"RED_IFV_T", "RED_IFV_T-1", "RED_IFV_T-2"}
 groundBattle.factions.red.groundTemplates.mbt = {"RED_MBT_T", "RED_MBT_T-1", "RED_MBT_T-2"}
@@ -75,6 +75,17 @@ groundBattle.combatZones.addLink("CombatZone-17", "CombatZone-18")
 
 -- production zones
 groundBattle.prodZoneNames = {"CombatZone-1", "CombatZone-18"}
+
+-- initial units placement
+groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-11")
+groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-12")
+groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-12")
+groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-13")
+groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-13")
+groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-7")
+groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-7")
+groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-8")
+groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-8")
 
 groundBattle.initiated = true
 groundBattle.debug = false
