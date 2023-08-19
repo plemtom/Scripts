@@ -59,22 +59,22 @@ groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
 
 -- events handler 
-function groundBattle.eventHandler(event)
-    if event.id == 1 then 
-        groundBattle.debugMessage("Shot event captured.")
-        groundBattle.debugMessage(groundBattle.logTable(event, 1))
+-- function groundBattle.eventHandler(event)
+--     if event.id == 1 then 
+--         groundBattle.debugMessage("Shot event captured.")
+--         groundBattle.debugMessage(groundBattle.logTable(event, 1))
         
-        local u = Unit.get
-        local grp = Unit.getGroup(event.initiator)
-        if grp then
-            groundBattle.debugMessage(groundBattle.logTable(grp, 1))
-            groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
-            groundBattle.setVisible(grp.name)
-        else
-            groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
-        end
-    end
-end 
+--         local u = Unit.get
+--         local grp = Unit.getGroup(event.initiator)
+--         if grp then
+--             groundBattle.debugMessage(groundBattle.logTable(grp, 1))
+--             groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
+--             groundBattle.setVisible(grp.name)
+--         else
+--             groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
+--         end
+--     end
+-- end 
 
 function groundBattle.logTable(tbl, indLevel)
     local retVal = {}
@@ -688,7 +688,7 @@ function groundBattle.run()
         return 
     end 
 
-    mist.addEventHandler(groundBattle.eventHandler)
+    --mist.addEventHandler(groundBattle.eventHandler)
 
     groundBattle.updateFrontlineZones()
 
