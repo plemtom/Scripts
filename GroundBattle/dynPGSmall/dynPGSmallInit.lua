@@ -76,6 +76,10 @@ groundBattle.combatZones.addLink("CombatZone-17", "CombatZone-18")
 -- production zones
 groundBattle.prodZoneNames = {"CombatZone-1", "CombatZone-18"}
 
+groundBattle.initiated = true
+groundBattle.debug = true
+groundBattle.debugMessage(string.format("Init done. Combat zones: %d.", #groundBattle.combatZones))
+
 -- initial units placement
 groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-11")
 groundBattle.produceGroup(groundBattle.factions.blue, "CombatZone-12")
@@ -87,8 +91,5 @@ groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-7")
 groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-8")
 groundBattle.produceGroup(groundBattle.factions.red, "CombatZone-8")
 
-groundBattle.initiated = true
-groundBattle.debug = false
-groundBattle.debugMessage(string.format("Init done. Combat zones: %d.", #groundBattle.combatZones))
 groundBattle.debugMessage("Executing groundBattle.run()")
 groundBattle.run()

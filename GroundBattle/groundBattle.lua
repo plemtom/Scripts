@@ -440,6 +440,7 @@ function groundBattle.produceGroup(faction, zoneName)
     local zoneNames 
     if zoneName then
         zoneNames[#zoneNames+1] = zoneName
+        groundBattle.debugMessage("Spawning group in explicit zone " .. zoneName)
     else
         zoneNames = groundBattle.getFactionProdZoneNames(faction.name)
     end
@@ -448,11 +449,11 @@ function groundBattle.produceGroup(faction, zoneName)
     end
 
     local spawnZoneName = zoneNames[math.random(1, #zoneNames)]
-    ---- groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
+    groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
 
     --spawn the group
     local grp = mist.cloneInZone(groupToSpawnName, spawnZoneName)
-    -- groundBattle.debugMessage("Group spawned. Name: " .. grp.name)
+    groundBattle.debugMessage("Group spawned. Name: " .. grp.name, 5)
 
     --register the group in faction
     table.insert(faction.groundGroups, {name=grp.name, zoneName=spawnZoneName, order="none", factionName=faction.name, type=groupType})
