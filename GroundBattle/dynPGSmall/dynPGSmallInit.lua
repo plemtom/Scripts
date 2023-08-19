@@ -1,6 +1,6 @@
 
 --init factions
-groundBattle.factions.red.aaaCount = 4
+groundBattle.factions.red.aaaCount = 2
 groundBattle.factions.blue.aaaCount = 2
 
 --init group templates
