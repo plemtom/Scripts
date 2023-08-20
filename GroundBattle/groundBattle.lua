@@ -50,8 +50,9 @@ groundBattle.factions.red.actCAP = {}
 groundBattle.factions.red.inactCAP = {}
 groundBattle.factions.red.actCAS = {}
 groundBattle.factions.red.inactCAS = {}
-groundBattle.factions.red.targetCAP = {}
-groundBattle.factions.red.targetCAS = {}
+groundBattle.factions.red.targetCAP = 0
+groundBattle.factions.red.targetCAS = 0
+groundBattle.factions.red.targetCAPRatio = 0.4
 
 
 groundBattle.factions.blue = {}
@@ -67,8 +68,9 @@ groundBattle.factions.blue.actCAP = {}
 groundBattle.factions.blue.inactCAP = {}
 groundBattle.factions.blue.actCAS = {}
 groundBattle.factions.blue.inactCAS = {}
-groundBattle.factions.blue.targetCAP = {}
-groundBattle.factions.blue.targetCAS = {}
+groundBattle.factions.blue.targetCAP = 0
+groundBattle.factions.blue.targetCAS = 0
+groundBattle.factions.blue.targetCAPRatio = 0.4
 
 groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
@@ -702,7 +704,26 @@ function groundBattle.checkOrderCompleted(groupName)
 end
 
 -- air groups orders system
-function groundBattle.processAirGroups(faction)
+function groundBattle.initiateAirManagement()
+    mist.scheduleFunction(groundBattle.processAirGroups, "red", timer.getTime() + 5, 1800)
+end
+
+function groundBattle.processAirGroups(factionName)
+    if groundBattle.redAirOn == false then
+        return 
+    end
+
+    local faction = {}
+    if factionName == "red" then
+        faction = groundBattle.factions.red
+    elseif factionName == "blue" then
+        faction = groundBattle.factions.blue
+    else 
+        return
+    end
+
+    groundBattle.updateAirGroupsCount(factionName)
+
     for i, name in pairs(faction.airGrpoupNames) do
         if mist.groupIsDead(name) then
             local index = table.findString(faction.actCAP, name)
@@ -764,6 +785,20 @@ function groundBattle.processAirGroups(faction)
     end
 end
 
+function groundBattle.updateAirGroupsCount(factionName)
+    local faction = {}
+    if factionName == "red" then
+        faction = groundBattle.factions.red
+    elseif factionName == "blue" then
+        faction = groundBattle.factions.blue
+    else 
+        return
+    end
+
+    local playerCount = #coalition.getPlayers(2)
+    faction.targetCAP = math.floor(playerCount * faction.targetCAPRatio)
+    faction.targetCAS = playerCount - faction.targetCAP
+end
 
 -- main function to be executed after initialization is done
 function groundBattle.run()
