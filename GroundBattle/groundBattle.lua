@@ -32,7 +32,8 @@ groundBattle.combatZones = {}
 groundBattle.combatZones.frontlineZones = {}
 groundBattle.prodZoneNames = {}
 groundBattle.initiated = false 
-groundBattle.productionInitiated = false 
+groundBattle.productionInitiated = false
+groundBattle.redAirOn = false
     
 --init Factions
 groundBattle.factions = {}
@@ -44,6 +45,13 @@ groundBattle.factions.red.name = "red"
 groundBattle.factions.red.groundTemplates = {}
 groundBattle.factions.red.groundGroups = {}     -- group structure {name, zoneName, order, factionName, type}. Orders: none, move (between friendly zones), attack
 groundBattle.factions.red.groundGroupsLimit = 0
+groundBattle.factions.red.airGroupNames = {}
+groundBattle.factions.red.actCAP = {}
+groundBattle.factions.red.inactCAP = {}
+groundBattle.factions.red.actCAS = {}
+groundBattle.factions.red.inactCAS = {}
+groundBattle.factions.red.targetCAP = {}
+groundBattle.factions.red.targetCAS = {}
 
 
 groundBattle.factions.blue = {}
@@ -54,27 +62,40 @@ groundBattle.factions.blue.name = "blue"
 groundBattle.factions.blue.groundTemplates = {}
 groundBattle.factions.blue.groundGroups = {}
 groundBattle.factions.blue.groundGroupsLimit = 0
+groundBattle.factions.blue.airGroupNames = {}
+groundBattle.factions.blue.actCAP = {}
+groundBattle.factions.blue.inactCAP = {}
+groundBattle.factions.blue.actCAS = {}
+groundBattle.factions.blue.inactCAS = {}
+groundBattle.factions.blue.targetCAP = {}
+groundBattle.factions.blue.targetCAS = {}
 
 groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
 
 -- events handler 
--- function groundBattle.eventHandler(event)
---     if event.id == 1 then 
---         groundBattle.debugMessage("Shot event captured.")
---         groundBattle.debugMessage(groundBattle.logTable(event, 1))
+function groundBattle.eventHandler(event)
+    -- if event.id == 1 then 
+    --     groundBattle.debugMessage("Shot event captured.")
+    --     groundBattle.debugMessage(groundBattle.logTable(event, 1))
         
---         local u = Unit.get
---         local grp = Unit.getGroup(event.initiator)
---         if grp then
---             groundBattle.debugMessage(groundBattle.logTable(grp, 1))
---             groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
---             groundBattle.setVisible(grp.name)
---         else
---             groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
---         end
---     end
--- end 
+    --     local u = Unit.get
+    --     local grp = Unit.getGroup(event.initiator)
+    --     if grp then
+    --         groundBattle.debugMessage(groundBattle.logTable(grp, 1))
+    --         groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
+    --         groundBattle.setVisible(grp.name)
+    --     else
+    --         groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
+    --     end
+    -- end
+    if event.id == 19 then -- engine shutdown event
+        local unit = event.initiator
+        if unit.getCoalition(unit) == 1 then -- only destroys RED units
+            unit.destroy(unit)
+        end
+    end 
+end 
 
 function groundBattle.logTable(tbl, indLevel)
     local retVal = {}
@@ -679,7 +700,70 @@ function groundBattle.checkOrderCompleted(groupName)
         -- groundBattle.debugMessage(string.format("Attack order completed for group: %s", groupName))
     end 
 end
+
 -- air groups orders system
+function groundBattle.processAirGroups(faction)
+    for i, name in pairs(faction.airGrpoupNames) do
+        if mist.groupIsDead(name) then
+            local index = table.findString(faction.actCAP, name)
+            if index then 
+                table.remove(faction.actCAP, index)
+                table.insert(faction.inactCAP, name)
+            end 
+            index = table.findString(faction.actCAS, name)
+            if index then
+                table.remove(faction.actCAS, index)
+                table.insert(faction.inactCAS, name)
+            end
+            --mist.respawnGroup(name, false)
+        end 
+    end
+
+    -- 2) check if enough caps active and activate if needed
+    while faction.targetCAP > #faction.actCAP do
+        if #faction.inactCAP > 0 then 
+            local rnd = math.random(1, #faction.inactCAP)
+            local gName = faction.inactCAP[rnd]
+            local grp = Group.getByName(gName)
+            if grp then 
+                if mist.groupIsDead(gName) then
+                    mist.respawnGroup(gName, false)
+                end
+                grp.activate(grp)
+                table.insert(faction.actCAP, gName)
+                table.remove(faction.inactCAP, rnd)
+                if groundBattle.debug then
+                    groundBattle.debugMessage(string.format("CAP: %d/%d, target: %d. Activating group %s", #grpManager.actCAP, #grpManager.inactCAP, grpManager.targetCAP, gName) , 20)
+                end
+            end
+        else 
+            break
+        end 
+    end 
+    
+    -- 3) check if enough cass active and activate if needed
+    while faction.targetCAS > #faction.actCAS do
+        if #faction.inactCAS > 0 then 
+            local rnd = math.random(1, #faction.inactCAS)
+            local gName = faction.inactCAS[rnd]
+            local grp = Group.getByName(gName)
+            if grp then 
+                if mist.groupIsDead(gName) then
+                    mist.respawnGroup(gName, false)
+                end
+                grp.activate(grp)
+                table.insert(faction.actCAS, gName)
+                table.remove(faction.inactCAS, rnd)
+                if groundBattle.debug then
+                    groundBattle.debugMessage(string.format("CAS: %d/%d, target: %d. Activating group %s", #grpManager.actCAS, #grpManager.inactCAS, grpManager.targetCAS, gName) , 20)
+                end
+            end
+        else 
+            break
+        end 
+    end
+end
+
 
 -- main function to be executed after initialization is done
 function groundBattle.run()
