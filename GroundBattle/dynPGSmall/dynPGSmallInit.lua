@@ -15,8 +15,8 @@ groundBattle.factions.red.groundTemplates.mbt = {"RED_MBT_T", "RED_MBT_T-1", "RE
 groundBattle.factions.red.groundTemplates.aaa = {"RED_AAA_T", "RED_AAA_T-1", "RED_AAA_T-2", "RED_AAA_T-3", "RED_AAA_T-4", "RED_AAA_T-5", "RED_AAA_T-6"}
 -- groundBattle.factions.red.groundTemplates.INF = {"RED_ATSQ_T"}
 
-groundBattle.factions.red.inactCAP = {"T_CAP_F4E_1"}
-groundBattle.factions.red.inactCAS = {"T_CAS_SU25_1"}
+groundBattle.factions.red.inactCAP = {"T_CAP_F4E_1", "T_CAP_F4E_2", "T_CAP_F4E_3", "T_CAP_F4E_4", "T_CAP_F14A_1"}
+groundBattle.factions.red.inactCAS = {"T_CAS_SU25_1", "T_CAS_SU25_2", "T_CAS_SU25_3", "T_SEAD_SU24_1", "T_SEAD_SU24_2"}
 
 groundBattle.factions.blue.groundGroupsLimit = 8
 groundBattle.factions.blue.apcPerc = 60
