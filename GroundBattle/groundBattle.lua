@@ -536,7 +536,7 @@ function groundBattle.spawnAAA(factionName, zoneName)
             end
         else
             local rnd = math.random(1, 100)
-            if rnd < (faction.aaaCount * 100) then 
+            if rnd <= (faction.aaaCount * 100) then 
                 local template = faction.groundTemplates.aaa[math.random(1, #faction.groundTemplates.aaa)]
                 local grp = mist.cloneInZone(template, zoneName, true, 100)
 
