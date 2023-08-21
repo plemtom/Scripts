@@ -32,7 +32,8 @@ groundBattle.combatZones = {}
 groundBattle.combatZones.frontlineZones = {}
 groundBattle.prodZoneNames = {}
 groundBattle.initiated = false 
-groundBattle.productionInitiated = false 
+groundBattle.productionInitiated = false
+groundBattle.redAirOn = true
     
 --init Factions
 groundBattle.factions = {}
@@ -44,6 +45,14 @@ groundBattle.factions.red.name = "red"
 groundBattle.factions.red.groundTemplates = {}
 groundBattle.factions.red.groundGroups = {}     -- group structure {name, zoneName, order, factionName, type}. Orders: none, move (between friendly zones), attack
 groundBattle.factions.red.groundGroupsLimit = 0
+groundBattle.factions.red.airGroupNames = {}
+groundBattle.factions.red.actCAP = {}
+groundBattle.factions.red.inactCAP = {}
+groundBattle.factions.red.actCAS = {}
+groundBattle.factions.red.inactCAS = {}
+groundBattle.factions.red.targetCAP = 1
+groundBattle.factions.red.targetCAS = 2
+groundBattle.factions.red.targetCAPRatio = 0.5
 
 
 groundBattle.factions.blue = {}
@@ -54,27 +63,27 @@ groundBattle.factions.blue.name = "blue"
 groundBattle.factions.blue.groundTemplates = {}
 groundBattle.factions.blue.groundGroups = {}
 groundBattle.factions.blue.groundGroupsLimit = 0
+groundBattle.factions.blue.airGroupNames = {}
+groundBattle.factions.blue.actCAP = {}
+groundBattle.factions.blue.inactCAP = {}
+groundBattle.factions.blue.actCAS = {}
+groundBattle.factions.blue.inactCAS = {}
+groundBattle.factions.blue.targetCAP = 0
+groundBattle.factions.blue.targetCAS = 0
+groundBattle.factions.blue.targetCAPRatio = 0.5
 
 groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
 
 -- events handler 
--- function groundBattle.eventHandler(event)
---     if event.id == 1 then 
---         groundBattle.debugMessage("Shot event captured.")
---         groundBattle.debugMessage(groundBattle.logTable(event, 1))
-        
---         local u = Unit.get
---         local grp = Unit.getGroup(event.initiator)
---         if grp then
---             groundBattle.debugMessage(groundBattle.logTable(grp, 1))
---             groundBattle.debugMessage("Group found. Name: " .. grp.name .. ", groupName: " .. grp.groupName)
---             groundBattle.setVisible(grp.name)
---         else
---             groundBattle.debugMessage("Group not returned for unit: " .. event.initiator.id)
---         end
---     end
--- end 
+function groundBattle.eventHandler(event)
+    if event.id == 19 then -- engine shutdown event
+        local unit = event.initiator
+        if unit.getCoalition(unit) == 1 then -- only destroys RED units
+            unit.destroy(unit)
+        end
+    end 
+end 
 
 function groundBattle.logTable(tbl, indLevel)
     local retVal = {}
@@ -516,14 +525,23 @@ function groundBattle.spawnAAA(factionName, zoneName)
         else
             return
         end 
+        if faction.aaaCount >= 1 then 
+            for i=1, faction.aaaCount do
+                if #faction.groundTemplates.aaa > 0 then
+                    local template = faction.groundTemplates.aaa[math.random(1, #faction.groundTemplates.aaa)]
+                    local grp = mist.cloneInZone(template, zoneName, true, 100)
 
-        for i=1, faction.aaaCount do
-            if #faction.groundTemplates.aaa > 0 then
+                    table.insert(zone.defences, grp.name)
+                end
+            end
+        else
+            local rnd = math.random(1, 100)
+            if rnd < (faction.aaaCount * 100) then 
                 local template = faction.groundTemplates.aaa[math.random(1, #faction.groundTemplates.aaa)]
                 local grp = mist.cloneInZone(template, zoneName, true, 100)
 
                 table.insert(zone.defences, grp.name)
-            end
+            end 
         end
     end
 end 
@@ -679,7 +697,167 @@ function groundBattle.checkOrderCompleted(groupName)
         -- groundBattle.debugMessage(string.format("Attack order completed for group: %s", groupName))
     end 
 end
+
 -- air groups orders system
+function groundBattle.initiateAirManagement()
+    mist.scheduleFunction(groundBattle.processAirGroups, {"red"}, timer.getTime() + 5, 1200)
+end
+
+function groundBattle.processAirGroups(factionName)
+    groundBattle.debugMessage("AIR!!! Executing processAirGroups.")
+    if groundBattle.redAirOn == false then
+        groundBattle.debugMessage("AIR!!! redAirOn is false. Breaking.")
+        return 
+    end
+
+    groundBattle.updateAirGroupsCount(factionName)
+
+    local faction = {}
+    if factionName == "red" then
+        faction = groundBattle.factions.red
+    elseif factionName == "blue" then
+        faction = groundBattle.factions.blue
+    else 
+        return
+    end
+
+    groundBattle.debugMessage("AIR!!! Target CAP: " .. faction.targetCAP)
+    groundBattle.debugMessage("AIR!!! Active CAP: " .. #faction.actCAP)
+    groundBattle.debugMessage("AIR!!! Inactive CAP: " .. #faction.inactCAP)
+    groundBattle.debugMessage("AIR!!! Target CAS: " .. faction.targetCAS)
+    groundBattle.debugMessage("AIR!!! Active CAS: " .. #faction.actCAS)
+    groundBattle.debugMessage("AIR!!! Inactive CAS: " .. #faction.inactCAS)
+
+    local indexesToRemove = {}
+    for i=1, #faction.actCAP do
+        local name = faction.actCAP[i]
+        if mist.groupIsDead(name) then
+            groundBattle.debugMessage("Group is dead: " .. name)
+            table.insert(indexesToRemove, i)
+            --table.remove(faction.actCAP, index)
+            table.insert(faction.inactCAP, name)
+        else
+            groundBattle.debugMessage("Group is not dead: " .. name)
+        end 
+    end
+    for i=1, #indexesToRemove do 
+        table.remove(faction.actCAP, indexesToRemove[i])
+    end
+    indexesToRemove = {}
+    for i=1, #faction.actCAS do
+        local name = faction.actCAS[i]
+        if mist.groupIsDead(name) then
+            table.insert(indexesToRemove, i)
+            --table.remove(faction.actCAS, index)
+            table.insert(faction.inactCAS, name)
+        end
+    end
+    for i=1, #indexesToRemove do 
+        table.remove(faction.actCAS, indexesToRemove[i])
+    end
+
+    -- 2) check if enough caps active and activate if needed
+    while faction.targetCAP > #faction.actCAP do
+        if #faction.inactCAP > 0 then 
+            local rnd = math.random(1, #faction.inactCAP)
+            local gName = faction.inactCAP[rnd]
+            local grp = Group.getByName(gName)
+            if grp then 
+                if mist.groupIsDead(gName) then
+                    mist.respawnGroup(gName, false)
+                    groundBattle.debugMessage("AIR!!! Respawning group " .. gName)
+                end
+                grp.activate(grp)
+                groundBattle.debugMessage("AIR!!! Activating group " .. gName)
+                table.insert(faction.actCAP, gName)
+                table.remove(faction.inactCAP, rnd)
+                if groundBattle.debug then
+                    groundBattle.debugMessage(string.format("CAP: %d/%d, target: %d. Activating group %s", #faction.actCAP, #faction.inactCAP, faction.targetCAP, gName) , 20)
+                end
+            else
+                groundBattle.debugMessage("AIR!!! Group not found: " .. gName)
+            end
+        else 
+            groundBattle.debugMessage("AIR!!! No inactive CAP groups. Breaking.")
+            break
+        end 
+    end 
+    
+    -- 3) check if enough cass active and activate if needed
+    while faction.targetCAS > #faction.actCAS do
+        if #faction.inactCAS > 0 then 
+            local rnd = math.random(1, #faction.inactCAS)
+            local gName = faction.inactCAS[rnd]
+            local grp = Group.getByName(gName)
+            if grp then 
+                if mist.groupIsDead(gName) then
+                    mist.respawnGroup(gName, false)
+                    groundBattle.debugMessage("AIR!!! Respawning group " .. gName)
+                end
+                grp.activate(grp)
+                groundBattle.debugMessage("AIR!!! Activating group " .. gName)
+                table.insert(faction.actCAS, gName)
+                table.remove(faction.inactCAS, rnd)
+                if groundBattle.debug then
+                    groundBattle.debugMessage(string.format("CAS: %d/%d, target: %d. Activating group %s", #faction.actCAS, #faction.inactCAS, faction.targetCAS, gName) , 20)
+                end
+            else
+                groundBattle.debugMessage("AIR!!! Group not found: " .. gName)
+            end
+        else 
+            groundBattle.debugMessage("AIR!!! No inactive CAS groups. Breaking.")
+            break
+        end 
+    end
+end
+
+function groundBattle.updateAirGroupsCount(factionName)
+    local faction = {}
+    if factionName == "red" then
+        faction = groundBattle.factions.red
+    elseif factionName == "blue" then
+        faction = groundBattle.factions.blue
+    else 
+        return
+    end
+
+    local playerCount = 3 -- #coalition.getPlayers(2)
+    faction.targetCAP = math.random(0, playerCount)
+    faction.targetCAS = playerCount - faction.targetCAP
+end
+
+-- function groundBattle.modifyAirRoute(grpName, mission, factionName)
+--     local points = mist.getGroupRoute(grpName, true)
+--     local tmpFrontlineZones = {}
+--     local tgtZone = ""
+--     local opforFactionName = ""
+
+--     if factionName == "red" then
+--         opforFactionName = "blue"
+--     else
+--         opforFactionName = "red"
+--     end
+
+--     if mission == "CAP" then 
+--         tmpFrontlineZones = groundBattle.getFriendlyFrontlineZones(factionName)
+--         groundBattle.debugMessage("AIR!!! CAP friendly frontlines: " .. #tmpFrontlineZones)
+--         tgtZone = tmpFrontlineZones[math.random(1, #tmpFrontlineZones)]
+--         groundBattle.debugMessage("AIR!!! CAP target zone: " .. tgtZone.name)
+--         local p = mist.getRandomPointInZone(tgtZone.name)
+--         points[3].x = p.x
+--         points[3].y = p.y
+--     elseif mission == "CAS" then 
+--         tmpFrontlineZones = groundBattle.getFriendlyFrontlineZones(opforFactionName)
+--         tgtZone = tmpFrontlineZones[math.random(1, #tmpFrontlineZones)]
+--         local p = mist.getRandomPointInZone(tgtZone.name)
+--         local wp = mist.fixedWing.buildWP(p, "turningpoint", 243, 5490, "baro")
+--         table.insert(points, 3, wp)
+--     else
+--         return nil
+--     end 
+--     return points
+-- end
+
 
 -- main function to be executed after initialization is done
 function groundBattle.run()
@@ -688,7 +866,7 @@ function groundBattle.run()
         return 
     end 
 
-    --mist.addEventHandler(groundBattle.eventHandler)
+    mist.addEventHandler(groundBattle.eventHandler)
 
     groundBattle.updateFrontlineZones()
 
@@ -700,8 +878,8 @@ function groundBattle.run()
         groundBattle.productionInitiated = true 
     end
 
-    groundBattle.initiateOrdersProcessing()    
+    groundBattle.initiateOrdersProcessing()
+    groundBattle.initiateAirManagement()    
 
     --mist.scheduleFunction(groundBattle.listCombatZones, {}, timer.getTime()+5, 60)
 end 
-
