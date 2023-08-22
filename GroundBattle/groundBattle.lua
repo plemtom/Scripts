@@ -39,7 +39,7 @@ groundBattle.redAirOn = true
 groundBattle.factions = {}
 groundBattle.factions.red = {}
 groundBattle.factions.red.aaaCount = 3
-groundBattle.factions.red.infCount = 5
+groundBattle.factions.red.defCount = 5
 groundBattle.factions.red.prodTimePerc = 100
 groundBattle.factions.red.name = "red"
 groundBattle.factions.red.groundTemplates = {}
@@ -53,11 +53,13 @@ groundBattle.factions.red.inactCAS = {}
 groundBattle.factions.red.targetCAP = 1
 groundBattle.factions.red.targetCAS = 2
 groundBattle.factions.red.targetCAPRatio = 0.5
+groundBattle.factions.red.hdgmin = 190
+groundBattle.factions.red.hdgmax = 240
 
 
 groundBattle.factions.blue = {}
 groundBattle.factions.blue.aaaCount = 3
-groundBattle.factions.blue.infCount = 5
+groundBattle.factions.blue.defCount = 5
 groundBattle.factions.blue.prodTimePerc = 100
 groundBattle.factions.blue.name = "blue"
 groundBattle.factions.blue.groundTemplates = {}
@@ -71,6 +73,8 @@ groundBattle.factions.blue.inactCAS = {}
 groundBattle.factions.blue.targetCAP = 0
 groundBattle.factions.blue.targetCAS = 0
 groundBattle.factions.blue.targetCAPRatio = 0.5
+groundBattle.factions.blue.hdgmin = 10
+groundBattle.factions.blue.hdgmax = 60
 
 groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
@@ -102,7 +106,6 @@ function groundBattle.logTable(tbl, indLevel)
     end
     return table.concat(retVal)
 end
-
 
 -- some assorted functions
 function groundBattle.isCombatZoneFrontline(zoneName)
@@ -279,7 +282,7 @@ function groundBattle.checkConflict(zoneName)
             groundBattle.combatZones.updateFaction(zoneName, "blue")
         end
         return false 
-    elseif redfor and zone.faction.name ~= "red" then
+    elseif redfor then
         if zone.faction.name ~= "red" then 
             groundBattle.combatZones.updateFaction(zoneName, "red")
         end
@@ -416,7 +419,7 @@ function groundBattle.initiateProduction()
     mist.scheduleFunction(groundBattle.produceGroup, {groundBattle.factions.blue}, timer.getTime() + 5, groundBattle.prodTime/100*groundBattle.factions.blue.prodTimePerc)
 end 
 
-function groundBattle.produceGroup(faction, zoneName)
+function groundBattle.produceGroup(faction, zoneName, defence)
 
     --remove entries for dead groups
     groundBattle.freeProdSlots(faction)
@@ -430,17 +433,32 @@ function groundBattle.produceGroup(faction, zoneName)
     local groupTemplates = {}
     local groupType = ""
 
-    local randomNumber = math.random(1, 100)
-    if randomNumber <= faction.apcPerc then
-        groupTemplates = faction.groundTemplates.apc
-        groupType = "apc"
-    elseif randomNumber <= (faction.apcPerc + faction.ifvPerc) then
-        groupTemplates = faction.groundTemplates.ifv
-        groupType = "ifv"
-    elseif randomNumber <= (faction.apcPerc + faction.ifvPerc + faction.mbtPerc) then
-        groupTemplates = faction.groundTemplates.mbt
-        groupType = "mbt"
+    if defence then
+        local randomNumber = math.random(1, 100)
+        if randomNumber <= faction.apcPerc[2] then
+            groupTemplates = faction.groundTemplates.apc
+            groupType = "apc"
+        elseif randomNumber <= (faction.apcPerc[2] + faction.ifvPerc[2]) then
+            groupTemplates = faction.groundTemplates.ifv
+            groupType = "ifv"
+        elseif randomNumber <= (faction.apcPerc[2] + faction.ifvPerc[2] + faction.mbtPerc[2]) then
+            groupTemplates = faction.groundTemplates.mbt
+            groupType = "mbt"
+        end
+    else
+        local randomNumber = math.random(1, 100)
+        if randomNumber <= faction.apcPerc[1] then
+            groupTemplates = faction.groundTemplates.apc
+            groupType = "apc"
+        elseif randomNumber <= (faction.apcPerc[1] + faction.ifvPerc[1]) then
+            groupTemplates = faction.groundTemplates.ifv
+            groupType = "ifv"
+        elseif randomNumber <= (faction.apcPerc[1] + faction.ifvPerc[1] + faction.mbtPerc[1]) then
+            groupTemplates = faction.groundTemplates.mbt
+            groupType = "mbt"
+        end
     end
+    
 
     local groupToSpawnName = groupTemplates[math.random(1, #groupTemplates)]
     ---- groundBattle.debugMessage("Ground group to spawn: " .. groupToSpawnName, 5)
@@ -457,15 +475,22 @@ function groundBattle.produceGroup(faction, zoneName)
         return 
     end
 
-    local spawnZoneName = zoneNames[math.random(1, #zoneNames)]
+    local spawnZoneName = zoneNames[math.random(1, #zoneNames)] .. "sp"
     groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
 
     --spawn the group
     local grp = mist.cloneInZone(groupToSpawnName, spawnZoneName)
     groundBattle.debugMessage("Group spawned. Name: " .. grp.name, 5)
 
-    --register the group in faction
-    table.insert(faction.groundGroups, {name=grp.name, zoneName=spawnZoneName, order="none", factionName=faction.name, type=groupType})
+    --register the group in faction or zone defences
+    if defence then 
+        local zone = groundBattle.combatZones.getZoneByName(spawnZoneName)
+        table.insert(zone.defences, grp.name)
+        local hdg = math.random(faction.hdgmin, faction.hdgmax)
+        groundBattle.giveMoveOrder(grp.name, spawnZoneName, hdg)
+    else
+        table.insert(faction.groundGroups, {name=grp.name, zoneName=spawnZoneName, order="none", factionName=faction.name, type=groupType})
+    end
     -- groundBattle.debugMessage(string.format("Faction groups: %d", #faction.groundGroups))
 end 
 
@@ -501,8 +526,7 @@ end
 function groundBattle.updateDefences()
     for i=1, #groundBattle.combatZones do 
         local zone = groundBattle.combatZones[i]
-        local toRemove = {}
-
+        
         for j=#zone.defences, 1, -1 do 
             local grp = Group.getByName(zone.defences[j])
 
@@ -510,6 +534,7 @@ function groundBattle.updateDefences()
                 table.remove(zone.defences, j)
             end
         end 
+        groundBattle.debugMessage(zone.name .. " has " .. #zone.defences .. " defending groups")
     end 
 end
 
@@ -574,6 +599,21 @@ function groundBattle.spawnInfantry(factionName, zoneName)
     end
 end
 
+function groundBattle.spawnDefences(factionName, zoneName)
+    local faction = {}
+    if factionName == "red" then
+        faction = groundBattle.factions.red
+    else
+        faction = groundBattle.factions.blue
+    end
+
+    local tmr = timer.getTime()
+    for i=1, faction.defCount do
+        tmr = tmr + 300
+        mist.scheduleFunction(groundBattle.produceGroup, {faction, zoneName, true}, tmr, nil, nil)
+    end
+end
+
 -- ground groups orders system
 function groundBattle.initiateOrdersProcessing()
     mist.scheduleFunction(groundBattle.processOrders, {groundBattle.factions.red}, timer.getTime() + 10, 300)
@@ -591,6 +631,7 @@ function groundBattle.processOrders(faction)
         --check if previous orders completed
         groundBattle.checkOrderCompleted(faction.groundGroups[i].name)
         -- groundBattle.debugMessage(string.format("Order for group %s: %s", faction.groundGroups[i].name, faction.groundGroups[i].order))
+        local hdg = math.random(faction.hdgmin, faction.hdgmax)
         if faction.groundGroups[i].order == "none" then -- only process idle groups
             --check if combat zone is frontline
             local isFrontline = groundBattle.isCombatZoneFrontline(faction.groundGroups[i].zoneName)
@@ -601,19 +642,19 @@ function groundBattle.processOrders(faction)
             if order == "move" then
                 local linkedZoneName = groundBattle.getRandomLinkedFriendlyZone(faction.groundGroups[i].zoneName)
                 if linkedZoneName then 
-                    groundBattle.giveMoveOrder(faction.groundGroups[i].name, linkedZoneName)
+                    groundBattle.giveMoveOrder(faction.groundGroups[i].name, linkedZoneName, hdg)
                     -- groundBattle.debugMessage(string.format("Move to %s order for group %s", linkedZoneName, faction.groundGroups[i].name))
                 end 
             elseif order == "front" then 
                 local frontlineZones = groundBattle.getFriendlyFrontlineZones(faction.name)
                 if #frontlineZones > 0 then 
                     local frontlineZone = frontlineZones[math.random(1, #frontlineZones)]
-                    groundBattle.giveMoveOrder(faction.groundGroups[i].name, frontlineZone.name)
+                    groundBattle.giveMoveOrder(faction.groundGroups[i].name, frontlineZone.name, hdg)
                 end
             elseif order == "attack" then
                 local linkedZoneName = groundBattle.getRandomLinkedHostileZone(faction.groundGroups[i].zoneName)
                 if linkedZoneName then 
-                    groundBattle.giveAttackOrder(faction.groundGroups[i].name, linkedZoneName)
+                    groundBattle.giveAttackOrder(faction.groundGroups[i].name, linkedZoneName, hdg)
                     local message = {}
                     message[#message+1] = "New objective: "
                     if faction.name == "red" then 
@@ -625,7 +666,7 @@ function groundBattle.processOrders(faction)
                 end
             end
         elseif faction.groundGroups[i].order == "attack" then
-            groundBattle.giveAttackOrder(faction.groundGroups[i].name, faction.groundGroups[i].zoneName)
+            groundBattle.giveAttackOrder(faction.groundGroups[i].name, faction.groundGroups[i].zoneName, hdg)
         end
     end
 end
@@ -661,8 +702,8 @@ function groundBattle.decideOrder(isFrontline, groupType)
     return order
 end 
 
-function groundBattle.giveMoveOrder(groupName, zoneName)
-    mist.groupToRandomZone(groupName, zoneName, "column", nil, 80, false)
+function groundBattle.giveMoveOrder(groupName, zoneName, hdg)
+    mist.groupToRandomZone(groupName, zoneName, "column", hdg, 80, false)
     local group = groundBattle.getGroupInfoByName(groupName)
     if group then 
         group.zoneName = zoneName
@@ -671,8 +712,8 @@ function groundBattle.giveMoveOrder(groupName, zoneName)
     end
 end
 
-function groundBattle.giveAttackOrder(groupName, zoneName)
-    mist.groupToRandomZone(groupName, zoneName, "line", nil, 20, true)
+function groundBattle.giveAttackOrder(groupName, zoneName, hdg)
+    mist.groupToRandomZone(groupName, zoneName, "line", hdg, 20, true)
     local group = groundBattle.getGroupInfoByName(groupName)
     if group then 
         group.zoneName = zoneName
