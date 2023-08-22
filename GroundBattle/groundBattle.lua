@@ -195,6 +195,7 @@ function groundBattle.combatZones.updateFaction(zoneName, factionName)
     end
     local params = {factionName, zoneName}
     mist.scheduleFunction(groundBattle.spawnAAA, params, timer.getTime()+300, nil, nil)
+    groundBattle.spawnDefences(factionName, zoneName)
     --mist.scheduleFunction(groundBattle.spawnInfantry, params, timer.getTime()+300, nil, nil)
 end
 
@@ -608,9 +609,10 @@ function groundBattle.spawnDefences(factionName, zoneName)
     end
 
     local tmr = timer.getTime()
+    local params = {faction, zoneName, true}
     for i=1, faction.defCount do
         tmr = tmr + 300
-        mist.scheduleFunction(groundBattle.produceGroup, {faction, zoneName, true}, tmr, nil, nil)
+        mist.scheduleFunction(groundBattle.produceGroup, params, tmr, nil, nil)
     end
 end
 
