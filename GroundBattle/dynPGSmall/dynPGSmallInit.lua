@@ -39,9 +39,11 @@ for i=1, 18 do
     if i < 9 then 
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.red, defences={}, links={}})
         groundBattle.spawnAAA("red", zoneName)
+        groundBattle.spawnDefences("red", zoneName, 0)
     elseif i > 10 then
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.blue, defences={}, links={}})
         groundBattle.spawnAAA("blue", zoneName)
+        groundBattle.spawnDefences("blue", zoneName, 0)
     else
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.neutral, defences={}, links={}})
     end 
@@ -84,7 +86,7 @@ groundBattle.combatZones.addLink("CombatZone-17", "CombatZone-18")
 groundBattle.prodZoneNames = {"CombatZone-1", "CombatZone-18"}
 
 groundBattle.initiated = true
-groundBattle.debug = false
+groundBattle.debug = true
 groundBattle.debugMessage(string.format("Init done. Combat zones: %d.", #groundBattle.combatZones))
 
 groundBattle.debugMessage("Executing groundBattle.run()")

@@ -1,27 +1,3 @@
--- to be tested:
-
--- - spawn invisible infantry with AT weapons
--- - make infantry visible as soon as they fire
-
--- implementation:
-
--- - alternative frontline orders processing - graph traversing instead of random protocol
--- - more defensive units and figure our defensive groups mix
-
--- - APC groups transport ground units with AT weapons (between warehouse and frontline/back area zones)
--- - Manage APC groups orders based on zones stats - keep track of defensive infantry units
--- - IFVs deploy aggresive infantry with AT weapons
-
--- - hide infantry back after some time since they fired their weapon
-
--- - Finetune groups speed for attack and move
--- - Add artilery fire support logic
--- - add artillery group template
-
--- - add trucks to reload SAMs
--- - figure out roles for different group types. What should infantry do? What should infantry carriers Init done. Combat zones: %d.
--- - Check victory condition    
-
 
 -- initialize LUA tables
 groundBattle = {}
@@ -109,7 +85,7 @@ end
 
 -- some assorted functions
 function groundBattle.isCombatZoneFrontline(zoneName)
-    zone = groundBattle.combatZones.getZoneByName(zoneName)
+    local zone = groundBattle.combatZones.getZoneByName(zoneName)
     for i=1, #zone.links do
         local linkedZone = groundBattle.combatZones.getZoneByName(zone.links[i])
         if zone.faction ~= linkedZone.faction then 
@@ -195,7 +171,7 @@ function groundBattle.combatZones.updateFaction(zoneName, factionName)
     end
     local params = {factionName, zoneName}
     mist.scheduleFunction(groundBattle.spawnAAA, params, timer.getTime()+300, nil, nil)
-    groundBattle.spawnDefences(factionName, zoneName)
+    groundBattle.spawnDefences(factionName, zoneName, 300)
     --mist.scheduleFunction(groundBattle.spawnInfantry, params, timer.getTime()+300, nil, nil)
 end
 
@@ -476,11 +452,12 @@ function groundBattle.produceGroup(faction, zoneName, defence)
         return 
     end
 
-    local spawnZoneName = zoneNames[math.random(1, #zoneNames)] .. "sp"
+    local spawnZoneName = zoneNames[math.random(1, #zoneNames)]
+    local spawnZoneNameSp = spawnZoneName .. "sp"
     groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
 
     --spawn the group
-    local grp = mist.cloneInZone(groupToSpawnName, spawnZoneName)
+    local grp = mist.cloneInZone(groupToSpawnName, spawnZoneNameSp)
     groundBattle.debugMessage("Group spawned. Name: " .. grp.name, 5)
 
     --register the group in faction or zone defences
@@ -600,7 +577,7 @@ function groundBattle.spawnInfantry(factionName, zoneName)
     end
 end
 
-function groundBattle.spawnDefences(factionName, zoneName)
+function groundBattle.spawnDefences(factionName, zoneName, delay)
     local faction = {}
     if factionName == "red" then
         faction = groundBattle.factions.red
@@ -611,8 +588,12 @@ function groundBattle.spawnDefences(factionName, zoneName)
     local tmr = timer.getTime()
     local params = {faction, zoneName, true}
     for i=1, faction.defCount do
-        tmr = tmr + 300
-        mist.scheduleFunction(groundBattle.produceGroup, params, tmr, nil, nil)
+        if delay > 0 then 
+            tmr = tmr + delay
+            mist.scheduleFunction(groundBattle.produceGroup, params, tmr, nil, nil)
+        else
+            groundBattle.produceGroup(faction, zoneName, true)
+        end
     end
 end
 
