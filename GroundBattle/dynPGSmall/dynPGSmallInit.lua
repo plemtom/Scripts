@@ -1,13 +1,15 @@
 
 --init factions
-groundBattle.factions.red.aaaCount = 2
-groundBattle.factions.blue.aaaCount = 2
+groundBattle.factions.red.aaaCount = 0.3
+groundBattle.factions.blue.aaaCount = 0.2
 
 --init group templates
 groundBattle.factions.red.groundGroupsLimit = 10
-groundBattle.factions.red.apcPerc = 50
-groundBattle.factions.red.ifvPerc = 30
-groundBattle.factions.red.mbtPerc = 20
+groundBattle.factions.red.hdgmin = 190
+groundBattle.factions.red.hdgmax = 240
+groundBattle.factions.red.apcPerc = {30, 50}
+groundBattle.factions.red.ifvPerc = {30, 30}
+groundBattle.factions.red.mbtPerc = {40, 20}
 groundBattle.factions.red.groundTemplates.apc = {"RED_APC_T", "RED_APC_T-1", "RED_APC_T-2", "RED_APC_T-3"}
 groundBattle.factions.red.groundTemplates.ifv = {"RED_IFV_T", "RED_IFV_T-1", "RED_IFV_T-2"}
 groundBattle.factions.red.groundTemplates.mbt = {"RED_MBT_T", "RED_MBT_T-1", "RED_MBT_T-2"}
@@ -19,9 +21,11 @@ groundBattle.factions.red.inactCAP = {"T_CAP_F4E_1", "T_CAP_F4E_2", "T_CAP_F4E_3
 groundBattle.factions.red.inactCAS = {"T_CAS_SU25_1", "T_CAS_SU25_2", "T_CAS_SU25_3", "T_SEAD_SU24_1", "T_SEAD_SU24_2"}
 
 groundBattle.factions.blue.groundGroupsLimit = 8
-groundBattle.factions.blue.apcPerc = 60
-groundBattle.factions.blue.ifvPerc = 30
-groundBattle.factions.blue.mbtPerc = 10
+groundBattle.factions.blue.hdgmin = 10
+groundBattle.factions.blue.hdgmax = 60
+groundBattle.factions.blue.apcPerc = {35, 60}
+groundBattle.factions.blue.ifvPerc = {35, 30}
+groundBattle.factions.blue.mbtPerc = {30, 10}
 groundBattle.factions.blue.groundTemplates.apc = {"BLUE_APC_T", "BLUE_APC_T-1", "BLUE_APC_T-2"}
 groundBattle.factions.blue.groundTemplates.ifv = {"BLUE_IFV_T", "BLUE_IFV_T-1", "BLUE_IFV_T-2"}
 groundBattle.factions.blue.groundTemplates.mbt = {"BLUE_MBT_T", "BLUE_MBT_T-1", "BLUE_MBT_T-2"}
@@ -35,9 +39,11 @@ for i=1, 18 do
     if i < 9 then 
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.red, defences={}, links={}})
         groundBattle.spawnAAA("red", zoneName)
+        groundBattle.spawnDefences("red", zoneName, 0)
     elseif i > 10 then
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.blue, defences={}, links={}})
         groundBattle.spawnAAA("blue", zoneName)
+        groundBattle.spawnDefences("blue", zoneName, 0)
     else
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.neutral, defences={}, links={}})
     end 
