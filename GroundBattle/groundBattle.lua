@@ -700,14 +700,17 @@ end
 
 -- air groups orders system
 function groundBattle.initiateAirManagement()
-    mist.scheduleFunction(groundBattle.processAirGroups, {"red"}, timer.getTime() + 5, 1200)
+    mist.scheduleFunction(groundBattle.processAirGroups, {"red"}, timer.getTime() + 5)
 end
 
 function groundBattle.processAirGroups(factionName)
     groundBattle.debugMessage("AIR!!! Executing processAirGroups.")
     if groundBattle.redAirOn == false then
+        mist.scheduleFunction(groundBattle.processAirGroups, {"red"}, timer.getTime() + 180)
         groundBattle.debugMessage("AIR!!! redAirOn is false. Breaking.")
         return 
+    else
+        mist.scheduleFunction(groundBattle.processAirGroups, {"red"}, timer.getTime() + 900)
     end
 
     groundBattle.updateAirGroupsCount(factionName)
@@ -821,8 +824,8 @@ function groundBattle.updateAirGroupsCount(factionName)
         return
     end
 
-    local playerCount = 3 -- #coalition.getPlayers(2)
-    faction.targetCAP = math.random(0, playerCount)
+    local playerCount = #coalition.getPlayers(2)
+    faction.targetCAP = math.random(0, math.floor(playerCount/2) + 1)
     faction.targetCAS = playerCount - faction.targetCAP
 end
 
