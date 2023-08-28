@@ -38,16 +38,21 @@ groundBattle.factions.blue.groundTemplates.aaa = {"BLUE_AAA_T", "BLUE_AAA_T-1", 
 -- init combat zones
 for i=1, 18 do
     local zoneName = string.format("CombatZone-%d", i)
-    if i < 9 then 
+    if i < 11 then 
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.red, defences={}, links={}})
         groundBattle.spawnAAA("red", zoneName)
-        groundBattle.spawnDefences("red", zoneName, 0)
     elseif i > 10 then
         table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.blue, defences={}, links={}})
         groundBattle.spawnAAA("blue", zoneName)
+    end 
+end
+
+for i=9, 13 do
+    local zoneName = string.format("CombatZone-%d", i)
+    if i < 11 then 
+        groundBattle.spawnDefences("red", zoneName, 0)
+    elseif i > 10 then
         groundBattle.spawnDefences("blue", zoneName, 0)
-    else
-        table.insert(groundBattle.combatZones, {name=zoneName, faction=groundBattle.factions.neutral, defences={}, links={}})
     end 
 end
 
