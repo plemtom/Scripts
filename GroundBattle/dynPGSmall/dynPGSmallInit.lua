@@ -1,4 +1,6 @@
 
+groundBattle.debug = false
+
 --init factions
 groundBattle.factions.red.aaaCount = 0.3
 groundBattle.factions.blue.aaaCount = 0.2
@@ -86,7 +88,6 @@ groundBattle.combatZones.addLink("CombatZone-17", "CombatZone-18")
 groundBattle.prodZoneNames = {"CombatZone-1", "CombatZone-18"}
 
 groundBattle.initiated = true
-groundBattle.debug = false
 groundBattle.debugMessage(string.format("Init done. Combat zones: %d.", #groundBattle.combatZones))
 
 groundBattle.debugMessage("Executing groundBattle.run()")
