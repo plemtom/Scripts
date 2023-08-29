@@ -14,8 +14,8 @@ groundBattle.redAirOn = true
 --init Factions
 groundBattle.factions = {}
 groundBattle.factions.red = {}
-groundBattle.factions.red.aaaCount = 3
-groundBattle.factions.red.defCount = 5
+groundBattle.factions.red.aaaCount = 0
+groundBattle.factions.red.defCount = 0
 groundBattle.factions.red.prodTimePerc = 100
 groundBattle.factions.red.name = "red"
 groundBattle.factions.red.groundTemplates = {}
@@ -26,16 +26,16 @@ groundBattle.factions.red.actCAP = {}
 groundBattle.factions.red.inactCAP = {}
 groundBattle.factions.red.actCAS = {}
 groundBattle.factions.red.inactCAS = {}
-groundBattle.factions.red.targetCAP = 1
-groundBattle.factions.red.targetCAS = 2
+groundBattle.factions.red.targetCAP = 0
+groundBattle.factions.red.targetCAS = 0
 groundBattle.factions.red.targetCAPRatio = 0.5
-groundBattle.factions.red.hdgmin = 190
-groundBattle.factions.red.hdgmax = 240
+groundBattle.factions.red.hdgmin = 0
+groundBattle.factions.red.hdgmax = 0
 
 
 groundBattle.factions.blue = {}
-groundBattle.factions.blue.aaaCount = 3
-groundBattle.factions.blue.defCount = 5
+groundBattle.factions.blue.aaaCount = 0
+groundBattle.factions.blue.defCount = 0
 groundBattle.factions.blue.prodTimePerc = 100
 groundBattle.factions.blue.name = "blue"
 groundBattle.factions.blue.groundTemplates = {}
@@ -49,8 +49,8 @@ groundBattle.factions.blue.inactCAS = {}
 groundBattle.factions.blue.targetCAP = 0
 groundBattle.factions.blue.targetCAS = 0
 groundBattle.factions.blue.targetCAPRatio = 0.5
-groundBattle.factions.blue.hdgmin = 10
-groundBattle.factions.blue.hdgmax = 60
+groundBattle.factions.blue.hdgmin = 0
+groundBattle.factions.blue.hdgmax = 0
 
 groundBattle.factions.neutral = {}
 groundBattle.factions.neutral.name = "neutral"
