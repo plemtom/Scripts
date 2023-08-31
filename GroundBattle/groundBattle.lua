@@ -388,6 +388,18 @@ function groundBattle.sendMessageToPlayers(message)
     trigger.action.outTextForCoalition(2, message, 30)
 end
 
+function groundBattle.printStatus()
+    local msg = {}
+    msg[#msg+1] = "------ Red Air Assets ------"
+    msg[#msg+1] = "CAP (Target/Active/Inactive): " .. groundBattle.factions.red.targetCAP .. "/" .. #groundBattle.factions.red.actCAP .. "/" .. #groundBattle.factions.red.inactCAP
+    msg[#msg+1] = "CAS (Target/Active/Inactive): " .. groundBattle.factions.red.targetCAS .. "/" .. #groundBattle.factions.red.actCAS .. "/" .. #groundBattle.factions.red.inactCAS
+    msg[#msg+1] = "------ Settings ------"
+    if groundBattle.redAirOn then msg[#msg+1] = "Red air assets: ON" else msg[#msg+1] = "Red air assets: OFF" end
+    msg[#msg+1] = "Blue platers: " .. #coalition.getPlayers(2)
+
+    trigger.action.outText(table.concat(msg, "\n"), groundBattle.dmt)
+end
+
 -- production functions ------------------------------------------------------------------------------------------------
 
 function groundBattle.initiateProduction()
@@ -459,6 +471,12 @@ function groundBattle.produceGroup(faction, zoneName, defence)
     --spawn the group
     local grp = mist.cloneInZone(groupToSpawnName, spawnZoneNameSp)
     groundBattle.debugMessage("Group spawned. Name: " .. grp.name, 5)
+
+    -- local g = Group.getByName(grp.name)
+    -- for i=1, #g:getUnits() do 
+    --     local u = Group.getUnit(g, i)
+    --     u.name = u.name .. u:getType()
+    -- end
 
     --register the group in faction or zone defences
     if defence then 
