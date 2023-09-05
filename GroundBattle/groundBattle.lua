@@ -408,7 +408,7 @@ function groundBattle.initiateProduction()
     mist.scheduleFunction(groundBattle.produceGroup, {groundBattle.factions.blue}, timer.getTime() + 5, groundBattle.prodTime/100*groundBattle.factions.blue.prodTimePerc)
 end 
 
-function groundBattle.produceGroup(faction, zoneName, defence)
+function groundBattle.oldProduceGroup(faction, zoneName, defence)
 
     --remove entries for dead groups
     groundBattle.freeProdSlots(faction)
@@ -488,14 +488,52 @@ function groundBattle.produceGroup(faction, zoneName, defence)
         table.insert(faction.groundGroups, {name=grp.name, zoneName=spawnZoneName, order="none", factionName=faction.name, type=groupType})
     end
     -- groundBattle.debugMessage(string.format("Faction groups: %d", #faction.groundGroups))
-end 
+end
+
+function groundBattle.produceGroup(faction)
+    --remove entries for dead groups
+    groundBattle.freeProdSlots(faction)
+
+    --check if max ground groups reached
+    if #faction.groundGroups >= faction.groundGroupsLimit then 
+        return
+    end
+
+    --get the unit template
+    local randomNumber = math.random(1, 100)
+    if randomNumber <= faction.apcPerc[1] then
+        groupTemplates = faction.groundTemplates.apc
+        groupType = "apc"
+    elseif randomNumber <= (faction.apcPerc[1] + faction.ifvPerc[1]) then
+        groupTemplates = faction.groundTemplates.ifv
+        groupType = "ifv"
+    else --if randomNumber <= (faction.apcPerc[1] + faction.ifvPerc[1] + faction.mbtPerc[1]) then
+        groupTemplates = faction.groundTemplates.mbt
+        groupType = "mbt"
+    end
+    local groupToSpawnName = groupTemplates[math.random(1, #groupTemplates)]
+
+    --get the zone to spawn group to
+    local zoneNames = groundBattle.getFactionProdZoneNames(faction.name)
+    if #zoneNames == 0 then
+        return 
+    end
+    local spawnZoneName = zoneNames[math.random(1, #zoneNames)] .. "sp"
+    groundBattle.debugMessage("Spawn zone name: " .. spawnZoneName, 5)
+
+    --spawn the group
+    local grp = mist.cloneInZone(groupToSpawnName, spawnZoneName)
+    groundBattle.debugMessage("Group spawned. Name: " .. grp.name, 5)
+
+    --register the group in faction or zone defences
+    table.insert(faction.groundGroups, {name=grp.name, zoneName=spawnZoneName, order="none", factionName=faction.name, type=groupType})
+end
 
 function groundBattle.getFactionProdZoneNames(factionName)
-    local returnZoneNames = {}
-    for i=1, #groundBattle.prodZoneNames do
-        local zone = groundBattle.combatZones.getZoneByName(groundBattle.prodZoneNames[i])
-        if zone.faction.name == factionName then
-            table.insert(returnZoneNames, zone.name)
+    local returnZoneNames = groundBattle.getFriendlyFrontlineZones(factionName)
+    for i = #returnZoneNames, 1, -1 do 
+        if not StaticObject.isExist(StaticObject.getByName(returnZonesNames[i] .. "Depot")) then 
+            table.remove(returnZoneNames, i)
         end
     end
     return returnZoneNames
@@ -504,17 +542,14 @@ end
 function groundBattle.freeProdSlots(faction)
     local toRemove = {}
 
-    for i=1, #faction.groundGroups do
+    for #faction.groundGroups, 1, -1 do
         local grp = Group.getByName(faction.groundGroups[i].name)
 
-        if grp == nil or #Group.getUnits(grp) == 0 then 
-            table.insert(toRemove, i)
-        end 
-    end
-
-    if #toRemove > 0 then
-        for i=1, #toRemove do 
-            table.remove(faction.groundGroups, toRemove[i])
+        if grp == nil then 
+            table.remove(faction.groundGroups, i)
+        elseif #Group.getUnits(grp) == 0 
+            Group.destroy(grp)
+            table.remove(faction.groundGroups, i)
         end 
     end
 end
