@@ -542,12 +542,12 @@ end
 function groundBattle.freeProdSlots(faction)
     local toRemove = {}
 
-    for #faction.groundGroups, 1, -1 do
+    for i = #faction.groundGroups, 1, -1 do
         local grp = Group.getByName(faction.groundGroups[i].name)
 
         if grp == nil then 
             table.remove(faction.groundGroups, i)
-        elseif #Group.getUnits(grp) == 0 
+        elseif #Group.getUnits(grp) == 0 then
             Group.destroy(grp)
             table.remove(faction.groundGroups, i)
         end 
