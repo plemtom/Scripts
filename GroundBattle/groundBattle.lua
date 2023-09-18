@@ -908,8 +908,10 @@ function groundBattle.updateAirGroupsCount(factionName)
     end
 
     local playerCount = #coalition.getPlayers(2)
-    faction.targetCAP = math.random(0, math.floor(playerCount/2) + 1)
-    faction.targetCAS = playerCount - faction.targetCAP
+    local maxCap = #faction.actCAP + #faction.inactCAP
+    local maxCas = #faction.actCas + #faction.inactCAS
+    faction.targetCAP = math.min(math.random(0, math.floor(playerCount/2) + 1), maxCap)
+    faction.targetCAS = math.min(playerCount - faction.targetCAP, maxCas)
 end
 
 -- function groundBattle.modifyAirRoute(grpName, mission, factionName)
