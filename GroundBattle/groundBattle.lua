@@ -343,9 +343,6 @@ end
 function groundBattle.getClosestFriendlyFrontlineZone(factionName, startZone)
     local zones = {}
     zones = groundBattle.getFriendlyFrontlineZones(factionName)
-
-
-    
 end
 
 function groundBattle.isGroupinZone(grpName, zoneName)
@@ -389,6 +386,15 @@ function groundBattle.sendMessageToPlayers(message)
 end
 
 function groundBattle.printStatus()
+    local msg = groundBattle.prepareStatusString()
+    trigger.action.outText(table.concat(msg, "\n"), groundBattle.dmt)
+end
+
+function groundBattle.logStatus()
+    env.info(groundBattle.prepareStatusString())
+end 
+
+function groundBattle.prepareStatusString()
     local msg = {}
     msg[#msg+1] = "------ Red Air Assets ------"
     msg[#msg+1] = "CAP (Target/Active/Inactive): " .. groundBattle.factions.red.targetCAP .. "/" .. #groundBattle.factions.red.actCAP .. "/" .. #groundBattle.factions.red.inactCAP
@@ -397,7 +403,7 @@ function groundBattle.printStatus()
     if groundBattle.redAirOn then msg[#msg+1] = "Red air assets: ON" else msg[#msg+1] = "Red air assets: OFF" end
     msg[#msg+1] = "Blue platers: " .. #coalition.getPlayers(2)
 
-    trigger.action.outText(table.concat(msg, "\n"), groundBattle.dmt)
+    return table.concat(msg, "\n")
 end
 
 -- production functions ------------------------------------------------------------------------------------------------
@@ -960,6 +966,8 @@ function groundBattle.run()
 
     groundBattle.initiateOrdersProcessing()
     groundBattle.initiateAirManagement()    
+
+    mist.scheduleFunction(groundBattle.logStatus, {}, timer.getTime()+300, 300)
 
     --mist.scheduleFunction(groundBattle.listCombatZones, {}, timer.getTime()+5, 60)
 end 
